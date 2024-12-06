@@ -82,13 +82,73 @@ public class PrintQueue {
                 }
             }
 
-            if (isCorrectOrder && !pages.isEmpty()) {
-                int middleIndex = pages.size() / 2;
-                int middlePage = pages.get(middleIndex);
+            if (!isCorrectOrder && !pages.isEmpty()) {
+                List<int[]> applicableRules = new ArrayList<>();
+                for (int[] rule : orderingRules) {
+                    int X = rule[0];
+                    int Y = rule[1];
+                    if (pagePositions.containsKey(X) && pagePositions.containsKey(Y)) {
+                        applicableRules.add(rule);
+                    }
+                }
+
+                List<Integer> sortedPages = topologicalSort(pages, applicableRules);
+
+                if (sortedPages == null) {
+                    System.err.println("Cycle detected in update: " + update + ". Cannot reorder.");
+                    continue;
+                }
+
+                int middleIndex = sortedPages.size() / 2;
+                int middlePage = sortedPages.get(middleIndex);
                 totalMiddleSum += middlePage;
             }
         }
 
         System.out.println(totalMiddleSum);
+    }
+
+    private static List<Integer> topologicalSort(List<Integer> pages, List<int[]> applicableRules) {
+        Map<Integer, List<Integer>> adj = new HashMap<>();
+        Map<Integer, Integer> inDegree = new HashMap<>();
+
+        for (int page : pages) {
+            adj.put(page, new ArrayList<>());
+            inDegree.put(page, 0);
+        }
+
+        for (int[] rule : applicableRules) {
+            int X = rule[0];
+            int Y = rule[1];
+            adj.get(X).add(Y);
+            inDegree.put(Y, inDegree.get(Y) + 1);
+        }
+
+        Queue<Integer> queue = new LinkedList<>();
+        for (int page : pages) {
+            if (inDegree.get(page) == 0) {
+                queue.offer(page);
+            }
+        }
+
+        List<Integer> sorted = new ArrayList<>();
+
+        while (!queue.isEmpty()) {
+            int current = queue.poll();
+            sorted.add(current);
+
+            for (int neighbor : adj.get(current)) {
+                inDegree.put(neighbor, inDegree.get(neighbor) - 1);
+                if (inDegree.get(neighbor) == 0) {
+                    queue.offer(neighbor);
+                }
+            }
+        }
+
+        if (sorted.size() != pages.size()) {
+            return null;
+        }
+
+        return sorted;
     }
 }
