@@ -50,6 +50,7 @@ public class BridgeRepair {
                 for (long val : currentValues) {
                     nextValues.add(val + nextNum);
                     nextValues.add(val * nextNum);
+                    nextValues.add(concatenate(val, nextNum));
                 }
 
                 currentValues = nextValues;
@@ -61,5 +62,18 @@ public class BridgeRepair {
         }
 
         System.out.println(totalCalibrationResult);
+    }
+
+    private static long concatenate(long a, long b) {
+        if (b == 0) {
+            return a * 10;
+        }
+        long power = 1;
+        long temp = b;
+        while (temp > 0) {
+            temp /= 10;
+            power *= 10;
+        }
+        return a * power + b;
     }
 }
